@@ -398,11 +398,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         ///
 
         ImGui::Begin("test");
-        ImGui::InputFloat3("point", &point.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat3("segment_origin", &segment.origin.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat3("segment_diff", &segment.diff.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
-        ImGui::InputFloat3("Project", &project.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
+        ImGui::SliderFloat3("point", &point.x, -2.0f, 2.0f);
+        ImGui::SliderFloat3("segment_origin", &segment.origin.x, -2.0f, 2.0f);
+        ImGui::SliderFloat3("segment_diff", &segment.diff.x, -2.0f, 2.0f);
+        ImGui::SliderFloat3("Project", &project.x, -2.0f, 2.0f);
         ImGui::End();
+
+        worldMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f });
+        cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, cameraRotate, cameraTranslate);
+        viewMatrix = Inverse(cameraMatrix);
+        projectionMatrix = MakePrespectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
+        worldViewProjectionMatrix = Mulyiply(worldMatrix, Mulyiply(viewMatrix, projectionMatrix));
+        viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
+
+        start = TransForm(TransForm(segment.origin, worldViewProjectionMatrix), viewportMatrix);
+        end = TransForm(TransForm(add(segment.origin, segment.diff), worldViewProjectionMatrix), viewportMatrix);
+
+        project = Project(Subtract(point, segment.origin), segment.diff);
+        closestpoint = ClosestPoint(point, segment);
+
+        pointSphere = { point, 0.01f };
+        closestPointShere = { closestpoint, 0.01f };
 
         ///
         /// ↑更新処理ここまで
